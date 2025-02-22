@@ -91,6 +91,7 @@ const dirListTemplate = `
 
 var (
 	minioClient *minio.Client
+	address     = *flag.String("address", ":80", "The endpoint of service")
 	bucket      = *flag.String("bucket", "mirror", "The bucket of oss")
 	endpoint    = *flag.String("endpoint", "192.168.31.12:9000", "The endpoint of oss")
 	accessKey   = *flag.String("access-key", "bailexian", "The access key of oss")
@@ -122,8 +123,8 @@ func main() {
 	minioClient = client
 
 	http.HandleFunc("/", handler)
-	log.Println("服务启动在 :8080 端口...")
-	log.Fatal(http.ListenAndServe(":8080", nil))
+	log.Println("服务启动在 " + address + " 端口...")
+	log.Fatal(http.ListenAndServe(address, nil))
 }
 
 func handler(w http.ResponseWriter, r *http.Request) {
