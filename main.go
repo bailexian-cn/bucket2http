@@ -91,11 +91,11 @@ const dirListTemplate = `
 
 var (
 	minioClient *minio.Client
-	address     = *flag.String("address", ":80", "The endpoint of service")
-	bucket      = *flag.String("bucket", "mirror", "The bucket of oss")
-	endpoint    = *flag.String("endpoint", "192.168.31.12:9000", "The endpoint of oss")
-	accessKey   = *flag.String("access-key", "bailexian", "The access key of oss")
-	secretKey   = *flag.String("secret-key", "bailexian_kakoi", "The secret key of oss")
+	address     = flag.String("address", ":80", "The endpoint of service")
+	bucket      = flag.String("bucket", "mirror", "The bucket of oss")
+	endpoint    = flag.String("endpoint", "192.168.31.12:9000", "The endpoint of oss")
+	accessKey   = flag.String("access-key", "bailexian", "The access key of oss")
+	secretKey   = flag.String("secret-key", "bailexian_kakoi", "The secret key of oss")
 	tmpl        = template.Must(template.New("dirlist").Parse(dirListTemplate))
 )
 
@@ -113,8 +113,8 @@ func main() {
 	flag.Parse()
 	// 初始化 MinIO 客户端
 	useSSL := false
-	client, err := minio.New(endpoint, &minio.Options{
-		Creds:  credentials.NewStaticV4(accessKey, secretKey, ""),
+	client, err := minio.New(*endpoint, &minio.Options{
+		Creds:  credentials.NewStaticV4(*accessKey, *secretKey, ""),
 		Secure: useSSL,
 	})
 	if err != nil {
@@ -123,8 +123,8 @@ func main() {
 	minioClient = client
 
 	http.HandleFunc("/", handler)
-	log.Println("服务启动在 " + address + " 端口...")
-	log.Fatal(http.ListenAndServe(address, nil))
+	log.Println("服务启动在 " + *address + " 端口...")
+	log.Fatal(http.ListenAndServe(*address, nil))
 }
 
 func handler(w http.ResponseWriter, r *http.Request) {
@@ -147,7 +147,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 
 func handleFile(w http.ResponseWriter, key string) bool {
 	// 检查文件是否存在
-	objInfo, err := minioClient.StatObject(context.Background(), bucket, key, minio.StatObjectOptions{})
+	objInfo, err := minioClient.StatObject(context.Background(), *bucket, key, minio.StatObjectOptions{})
 	if objInfo.ContentType == "application/x-directory" {
 		return false
 	}
@@ -160,7 +160,7 @@ func handleFile(w http.ResponseWriter, key string) bool {
 	}
 
 	// 获取文件内容
-	object, err := minioClient.GetObject(context.Background(), bucket, key, minio.GetObjectOptions{})
+	object, err := minioClient.GetObject(context.Background(), *bucket, key, minio.GetObjectOptions{})
 	if err != nil {
 		log.Printf("文件获取失败: %v", err)
 		return false
@@ -188,7 +188,7 @@ func handleDirectory(w http.ResponseWriter, prefix string) bool {
 	}
 
 	// 列出目录内容
-	ch := minioClient.ListObjects(context.Background(), bucket, minio.ListObjectsOptions{
+	ch := minioClient.ListObjects(context.Background(), *bucket, minio.ListObjectsOptions{
 		Prefix:    prefix,
 		Recursive: false,
 	})
